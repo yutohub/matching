@@ -1,55 +1,66 @@
 package matching
 
-func GaleShapley(msPrefers, wsPrefers [][]int) map[int]int {
-	// マッチングしていない男性のリストを作成
+import (
+	"errors"
+	"fmt"
+)
+
+// Extend Gale-Shapley algorithm for incomplete lists
+// Args: each person's preference order
+// Returns: stable matching
+func GaleShapley(msPrefers, wsPrefers [][]int) (map[int]int, error) {
+	// Check for lack of participants
+	if len(msPrefers) == 0 || len(wsPrefers) == 0 {
+		return nil, errors.New("GaleShapley: Lack of participants")
+	}
+	// Create a list of unmatched men
 	msUnpaired := make([]int, len(msPrefers))
 	for i := 0; i < len(msPrefers); i++ {
 		msUnpaired[i] = i
 	}
-	// ハッシュマップ{女性: 仮マッチングしている男性}
+	// Register a Matching
 	wsPartner := make(map[int]int, len(wsPrefers))
-	// マッチングしていない男性がいる限り
+	// As long as there are men who are not matched
 	for len(msUnpaired) > 0 {
-		// マッチングしていない男性を一人取り出す
+		// Pick up one man who has not been matched
 		msTarget := msUnpaired[0]
 		msUnpaired = msUnpaired[1:]
-		// 男性の候補が残っていなければ次に行く
+		// Skip if there are no male preferences left
 		if len(msPrefers[msTarget]) == 0 {
 			continue
 		}
-		// 男性の候補の女性を取り出す
+		// Take out the most preferred partner
 		wsTarget := msPrefers[msTarget][0]
 		msPrefers[msTarget] = msPrefers[msTarget][1:]
-		// 男性が候補の女性の希望リストに入っているか調べる
+		// Check if the target is included in the preferences
 		msTargetRank, ok := targetRank(wsPrefers[wsTarget], msTarget)
-		// 候補の女性の希望リストに入っていないなら、マッチングしていない男性のリストに戻す
+		// Put msTarget back on the list of unmatched men.
 		if !ok {
 			msUnpaired = append(msUnpaired, msTarget)
 			continue
 		}
-		// 候補の女性が仮マッチングしているか調べる
+		// Check if wsTarget is tentatively matched
 		msMatched, ok := wsPartner[wsTarget]
-		// 候補の女性が仮マッチングしていない場合、マッチングさせる
+		// If msTarget is not tentatively matched, matching
 		if !ok {
 			wsPartner[wsTarget] = msTarget
 			continue
 		}
-		// 候補の女性が仮マッチングしている場合、何番目か調べる
+		// If msTarget is not tentatively matched,
+		// check the rank of the tentatively matched partner
 		msMatchedRank, _ := targetRank(wsPrefers[wsTarget], msMatched)
-		// その男性と仮マッチングしている相手を比較する
-		// もし男性の方が今マッチングしている相手より上の場合
-		// マッチングを更新し、今マッチングしている相手をマッチングしていない男性のリストに戻す
+		// Compare the man with his tentative matching partner
 		if msTargetRank < msMatchedRank {
 			wsPartner[wsTarget] = msTarget
 			msUnpaired = append(msUnpaired, msMatched)
 		} else {
-			// そうでなければ、マッチングしていない男性のリストに戻す
 			msUnpaired = append(msUnpaired, msTarget)
 		}
 	}
-	return wsPartner
+	return wsPartner, nil
 }
 
+// Check if the target is included in the preferences and return target's rank
 func targetRank(prefers []int, target int) (int, bool) {
 	for i, p := range prefers {
 		if target == p {
@@ -57,4 +68,12 @@ func targetRank(prefers []int, target int) (int, bool) {
 		}
 	}
 	return 0, false
+}
+
+// Display the results of matching
+func Show(result map[int]int) {
+	for ws := range result {
+		ms := result[ws]
+		fmt.Printf("m%d --- w%d\n", ms, ws)
+	}
 }
