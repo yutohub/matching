@@ -1,13 +1,14 @@
 package matching_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/yutohub/matching"
 )
 
-func TestGS4x4(t *testing.T) {
+func TestGaleShapley4x4(t *testing.T) {
 	msPrefers := [][]int{
 		{0, 1, 2, 3},
 		{3, 0, 1, 2},
@@ -33,7 +34,7 @@ func TestGS4x4(t *testing.T) {
 	}
 }
 
-func TestGS3x3(t *testing.T) {
+func TestGaleShapley4x3(t *testing.T) {
 	msPrefers := [][]int{
 		{2, 3, 1},
 		{2, 1, 3},
@@ -59,28 +60,30 @@ func TestGS3x3(t *testing.T) {
 	}
 }
 
-func TestGSLessMsPrefers(t *testing.T) {
+func TestGaleShapleyLackingMsPrefers(t *testing.T) {
 	msPrefers := [][]int{}
 	wsPrefers := [][]int{{0}, {1}, {3}, {2}}
 	result, err := matching.GaleShapley(msPrefers, wsPrefers)
-	fmt.Printf("TestGSLessMsPrefers: %s\n", err)
 	if result != nil {
 		t.Error("ERROR: Expect an error and no result returned")
 	}
-	if err == nil {
+	if errors.Is(err, matching.ErrorLackingPrefers) {
+		fmt.Printf("TestGaleShapleyLackingMsPrefers: %s\n", err)
+	} else {
 		t.Error("ERROR: Expect error occurred")
 	}
 }
 
-func TestGSLessWsPrefers(t *testing.T) {
+func TestGaleShapleyLackingWsPrefers(t *testing.T) {
 	msPrefers := [][]int{{0}, {1}, {3}, {2}}
 	wsPrefers := [][]int{}
 	result, err := matching.GaleShapley(msPrefers, wsPrefers)
-	fmt.Printf("TestGSLessWsPrefers: %s\n", err)
 	if result != nil {
 		t.Error("ERROR: Expect an error and no result returned")
 	}
-	if err == nil {
+	if errors.Is(err, matching.ErrorLackingPrefers) {
+		fmt.Printf("TestGaleShapleyLackingWsPrefers: %s\n", err)
+	} else {
 		t.Error("ERROR: Expect error occurred")
 	}
 }
