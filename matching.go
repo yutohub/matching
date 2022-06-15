@@ -5,13 +5,17 @@ import (
 	"fmt"
 )
 
+var (
+	ErrorLackingPrefers = errors.New("GaleShapley: Lack of prefers")
+)
+
 // Extend Gale-Shapley algorithm for incomplete lists
 // Args: each person's preference order
 // Returns: stable matching
 func GaleShapley(msPrefers, wsPrefers [][]int) (map[int]int, error) {
 	// Check for lack of participants
 	if len(msPrefers) == 0 || len(wsPrefers) == 0 {
-		return nil, errors.New("GaleShapley: Lack of participants")
+		return nil, ErrorLackingPrefers
 	}
 	// Create a list of unmatched men
 	msUnpaired := make([]int, len(msPrefers))
